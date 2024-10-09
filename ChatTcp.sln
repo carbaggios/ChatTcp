@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35303.130
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chat.Server", "Chat.Server\Chat.Server.csproj", "{F581EF43-F8F7-43DA-BE6F-6DDDFCCC2A82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chat.Server", "Chat.Server\Chat.Server.csproj", "{F581EF43-F8F7-43DA-BE6F-6DDDFCCC2A82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chat.Client", "Chat.Client\Chat.Client.csproj", "{29066CB2-4673-4059-9119-F5152F9FB1E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chat.Client", "Chat.Client\Chat.Client.csproj", "{29066CB2-4673-4059-9119-F5152F9FB1E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UdpListener", "UdpListener\UdpListener.csproj", "{CFEEADCE-F9A2-408B-92FC-9D0041AD4F51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{29066CB2-4673-4059-9119-F5152F9FB1E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29066CB2-4673-4059-9119-F5152F9FB1E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29066CB2-4673-4059-9119-F5152F9FB1E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFEEADCE-F9A2-408B-92FC-9D0041AD4F51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFEEADCE-F9A2-408B-92FC-9D0041AD4F51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFEEADCE-F9A2-408B-92FC-9D0041AD4F51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFEEADCE-F9A2-408B-92FC-9D0041AD4F51}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

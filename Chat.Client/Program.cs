@@ -3,28 +3,50 @@ using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.Unicode;
+using Udp;
 
 namespace Chat.Client
 {
     internal class Program
     {
-        private const int _serverPort = 9901;
+        private const int _serverPort = 9001;
+        private static UdpClient udpClient = new UdpClient();
+        private static IPEndPoint endPoint = new IPEndPoint(IPAddress.Broadcast, 8001);
         static async Task Main(string[] args)
         {
-            var udpClient = new UdpClient(/*9910*/);
-            await udpClient.SendAsync(Encoding.UTF8.GetBytes("Hello I'm a new client"), new IPEndPoint(IPAddress.Broadcast, 9910));
+            
+            //var udpClient = new UdpClient();
+            //IPEndPoint endPoint = new IPEndPoint(IPAddress.Broadcast, 8001);
+            await udpClient.SendAsync(Encoding.UTF8.GetBytes("Ping"), endPoint);
 
-            Task.Run(async () =>
+            Console.WriteLine("Connected");
+            
+            var udpListener = new Listener();
+            udpListener.MessageReceived += Udp_MessageReceived;
+            udpListener.Start(udpClient);
+
+            using TcpClient tcpClient = await ListenTcp();
+        }
+
+        private static void Udp_MessageReceived(object? sender, UdpMessageEventArgs e)
+        {
+            //var endPoint = sender as IPEndPoint;
+            //var udpClient = new UdpClient();
+
+            Console.WriteLine("Client Udp_MessageReceived: Message=" + e.Message);
+
+            if (e.Message == "Server Login")
             {
-                do
+                Task.Run(() =>
                 {
-                    var result = await udpClient.ReceiveAsync();
-                    Console.WriteLine($"{Encoding.UTF8.GetString(result.Buffer)} -> {result.RemoteEndPoint}");
-                }
-                while (true);
-            });
+                    udpClient.SendAsync(Encoding.UTF8.GetBytes("Ping2"), endPoint);
+                });
+            }
+        }
 
-            using var tcpClient = new TcpClient();
+        private static async Task<TcpClient> ListenTcp()
+        {
+            var tcpClient = new TcpClient();
             tcpClient.Connect(System.Net.IPAddress.Loopback, _serverPort);
 
             var stream = tcpClient.GetStream();
@@ -36,8 +58,10 @@ namespace Chat.Client
                 string? message = null;
                 do
                 {
+                    
                     message = reader.ReadLine();
-                    Console.WriteLine(message);
+                    //Console.WriteLine("ProtocolType=" + stream.Socket.ProtocolType.ToString());
+                    Console.WriteLine("Client ListenTcp=" + message);
                 }
                 while (true);
             });
@@ -54,6 +78,7 @@ namespace Chat.Client
             });
 
             await Task.WhenAll(readerTask, writerTask);
+            return tcpClient;
         }
     }
 }

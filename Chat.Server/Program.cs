@@ -1,90 +1,35 @@
 ﻿using System.IO;
+using System.Net;
 using System.Net.Sockets;
+using System.Reflection.PortableExecutable;
 using System.Text;
+using Udp;
 
 namespace Chat.Server
 {
-    class ChatClient:IDisposable
-    { 
-        private readonly TcpClient _tcpClient;
-        private readonly NetworkStream _stream;
-        private readonly StreamReader _reader;
-        private readonly StreamWriter _writer;
-
-        public TcpClient Client => _tcpClient;
-        public ChatClient(TcpClient tcpClient)
-        { 
-            _tcpClient = tcpClient;
-
-            _stream = _tcpClient.GetStream();
-            _reader = new StreamReader(_stream);
-            _writer = new StreamWriter(_stream);
-        }
-
-        public void Dispose()
-        {
-            _stream.Dispose();
-        }
-
-        public Task Run()
-        {
-            return Task.Run( () => 
-            { 
-                string? message = null;
-                do
-                {
-                    message = _reader.ReadLine();
-                    Log(message);
-                    MessageReceived?.Invoke(this, new ChatMessageEventArgs(message));
-                }
-                while (!string.IsNullOrEmpty(message));
-            });
-        }
-
-        public async Task SendMessage(string? message)
-        { 
-            await _writer.WriteLineAsync(message);
-            await _writer.FlushAsync();
-        }
-
-        private void Log(string? message)
-        { 
-            Console.WriteLine($"[{_tcpClient.Client.RemoteEndPoint}]: {message}");
-        }
-
-        public event EventHandler<ChatMessageEventArgs>? MessageReceived;
-    }
-
-    class ChatMessageEventArgs : EventArgs
-    {
-        public string? Message { get; }
-
-        public ChatMessageEventArgs(string? message)
-        {
-            Message = message;
-        }
-    }
-
     internal class Program
     {
-        private const int _port = 9901;
+        private const int _tcpPort = 9001;
         private static List<ChatClient> _clients = new List<ChatClient>();
+
         static async Task Main(string[] args)
         {
-            var udpClient = new UdpClient(9910);
-            Task.Run(async () =>
-            {
-                do
-                {
-                    var result = await udpClient.ReceiveAsync();
-                    Console.WriteLine($"{Encoding.UTF8.GetString(result.Buffer)} -> {result.RemoteEndPoint}");
-                }
-                while (true);
-            });
+            Console.WriteLine("Starting UDP Listener");
+            var udpListener = new Listener();
+            udpListener.MessageReceived += Udp_MessageReceived;
+            udpListener.Start();
 
-            var server = new TcpListener(System.Net.IPAddress.Any, _port);
+            Console.WriteLine("Starting TCP Listener");
+            var server = new TcpListener(System.Net.IPAddress.Any, _tcpPort);
             server.Start();
 
+            Console.WriteLine("Server started");
+
+            await ListenTcp(server);
+        }
+
+        private static async Task ListenTcp(TcpListener server)
+        {
             try
             {
                 while (true)
@@ -98,8 +43,31 @@ namespace Chat.Server
                 }
             }
             finally
-            { 
+            {
                 server.Stop();
+            }
+        }
+
+        private static void Udp_MessageReceived(object? sender, UdpMessageEventArgs e)
+        {
+            var endPoint = sender as IPEndPoint;
+            var udpClient = new UdpClient();
+
+            if (e.Message == "Ping")
+            {
+                Task.Run(() =>
+                {
+                    udpClient.SendAsync(Encoding.UTF8.GetBytes("Server Login"), endPoint);
+                });
+            }
+
+            if (e.Message == "Ping2")
+            {
+                Task.Run(() =>
+                {
+                    udpClient.SendAsync(Encoding.UTF8.GetBytes("Server Password"), endPoint);
+                    //udpClient.SendAsync(Encoding.UTF8.GetBytes($"Server Udp_MessageReceived_2: {endPoint.Address}:{endPoint.Port}"), endPoint);
+                });
             }
         }
 
